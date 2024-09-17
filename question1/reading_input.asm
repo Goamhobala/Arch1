@@ -41,13 +41,4 @@ main:
     syscall
 
 
-    # Store the value 
-
-
-
-
-    # Store file size
-    
-
-
-
+    # Store the valu
