@@ -33,7 +33,16 @@ main:
     syscall
 
     # move file name input to $s0
-    move $s0, $a0
+    la $t0, file_path
+    # Counter
+    move $t3, $zero
+    #t0 stores the current char address of the string
+    #t1 stores the target
+    jalr clean_path 
+
+    sub $t0, $t0, $t3
+    addi $t0, $t0, 1
+
 
     # Prompt to input file size
     la $a0, input_size_prompt
@@ -57,7 +66,7 @@ main:
    
     # Open the file
     li $v0, 13  # Opens file, takes 3 args.
-    la $a0, hardcoded # a0 Address of file_path string
+    move $a0, $t0 # a0 Address of file_path string
     li $a1, 0   # a1 flags (0 for read)           
     li $a2, 0   # a2 mode  (0 for permission, don't need this if not creating)
     syscall     
@@ -75,34 +84,6 @@ main:
     li $a2, 132344 # File Size == Number of Characters to read?
     syscall
 
-
-    # Test reading
- #   move $a0, $v0
-   # li $v0, 1
-    #syscall
-
-
-    # Test Printing Chunk ID
- #   lw $t2, 0($t0) #load the first item in the location (pointer)
-    # la $t0, test_buffer
-    # la $a0, 22($t0) # Load address of first item of the file (item stored in that location)
-    # li $v0, 1
-    # syscall
-
-    # li $v0, 10
-    # syscall
-  
-  # fetching number of channels
-  # la $t0, test_buffer # load the first item in the buffer
-  # # Print number of channels
-
-  # li $v0, 4
-  # move $a0, $t0
-  # syscall
-
-  # la $a0, 12($t0)
-  # syscall
-
   la $t0, test_buffer
 
   la $t0, 22($t0) # address to the number of channels
@@ -112,29 +93,10 @@ main:
   move $a0, $t1
   syscall
 
-# # Print address
-#   li $v0, 1
-#   la $a0, 0($t0)
-#   syscall
-
 # Print data
   li $v0, 1
   lh $a0, 0($t0)
   syscall
-
-
-  # li $v0, 1
-  # lb $a0, 2($t0)
-  # syscall
-
-  # li $v0, 1
-  # lb $a0, 1($t0)
-  # syscall
-
-  # li $v0, 1
-  # lb $a0, 0($t0)
-  # syscall
-
 
   jal new_line
 
@@ -191,6 +153,31 @@ new_line:
   
   jr $ra
 
+
+clean_path:
+  #Loop for removing \n
+
+
+  lb $t2, 0($t0)
+  beq $t2, $zero, remove_char
+  # Add counter for reverse later
+  addi $t3, $t3, 1
+  addi $t0, $t0, 1
+  j clean_path
+  
+remove_char:
+  # # Test before
+  # lb $t1, 0($t0)
+  # move $a0, $t1
+
+  # li $v0, 1
+  # syscall
+  sb $zero, 0($t0)
+  lb $t1, 0($t0)
+  # move $a0, $t1
+  # li $v0, 1
+  # syscall
+  jr $ra
 
 
 
