@@ -1,13 +1,21 @@
 # question1.asm
 .data
 input_file_prompt: .asciiz "Enter:\n"
-file_path: .space 4097 # max chars is 4096
 input_size_prompt: .asciiz "file size: \n"
+channel_message: .asciiz "Number of channels: "
+sample_rate_message: .asciiz "Sample rate:  "
+byte_rate_message: .asciiz "Byte rate: "
+bits_message: .asciiz "Bits per sample: "
+next_line: .asciiz "\n"
+
+
+file_path: .space 4097 # max chars is 4096
 file_size: .word 0
 output_heading: .asciiz "Heading:\n"
 header_pointer: .word 1
 hardcoded: .asciiz "/home/y/yhxjin001/CSC2002S/Arch1/question1/q1_t1_in.wav"
 test_buffer: .space 44
+
 
 .text # Starts code section of the program
 .globl main # makes main visible to the linker
@@ -43,8 +51,8 @@ main:
     li $v0, 9
     lw $a0, file_size
     syscall
-    la $t0, header_pointer
-    sw $v0, 0($t0) # v0 contains address of the allocated memory
+    la $t5, header_pointer
+    sw $v0, 0($t5) # v0 contains address of the allocated memory
                    # Header pointer points to the memory location
    
     # Open the file
@@ -76,13 +84,113 @@ main:
 
     # Test Printing Chunk ID
  #   lw $t2, 0($t0) #load the first item in the location (pointer)
-    la $t0, test_buffer
-    la $a0, 22($t0) # Load address of first item of the file (item stored in that location)
-    li $v0, 1
-    syscall
+    # la $t0, test_buffer
+    # la $a0, 22($t0) # Load address of first item of the file (item stored in that location)
+    # li $v0, 1
+    # syscall
 
-    li $v0, 10
-    syscall
+    # li $v0, 10
+    # syscall
+  
+  # fetching number of channels
+  # la $t0, test_buffer # load the first item in the buffer
+  # # Print number of channels
+
+  # li $v0, 4
+  # move $a0, $t0
+  # syscall
+
+  # la $a0, 12($t0)
+  # syscall
+
+  la $t0, test_buffer
+
+  la $t0, 22($t0) # address to the number of channels
+  la $t1, channel_message
+
+  li $v0, 4
+  move $a0, $t1
+  syscall
+
+# # Print address
+#   li $v0, 1
+#   la $a0, 0($t0)
+#   syscall
+
+# Print data
+  li $v0, 1
+  lh $a0, 0($t0)
+  syscall
+
+
+  # li $v0, 1
+  # lb $a0, 2($t0)
+  # syscall
+
+  # li $v0, 1
+  # lb $a0, 1($t0)
+  # syscall
+
+  # li $v0, 1
+  # lb $a0, 0($t0)
+  # syscall
+
+
+  jal new_line
+
+  la $t0, 2($t0) # address to the number of channels
+  la $t1, sample_rate_message
+
+  li $v0, 4
+  move $a0, $t1
+  syscall
+
+  li $v0, 1
+  lw $a0, 0($t0)
+  syscall
+
+  jal new_line
+
+  la $t0, 4($t0) # address to the number of channels
+  la $t1, byte_rate_message
+  jal print_msg
+  li $v0, 1
+  lw $a0, 0($t0)
+  syscall
+
+  jal new_line
+
+  la $t0, 6($t0) # address to the number of channels
+  la $t1, bits_message
+  jal print_msg
+  li $v0, 1
+  lh $a0, 0($t0)
+  syscall
+
+
+
+  li $v0, 10
+  syscall
+
+  # la $s1, 24($t0) # Address to the smaple rate
+  # la $s2. 28($t0) # Address to byte rate
+
+
+print_msg:
+  # Take t0 as the integer
+  # Take t1 as the message
+  li $v0, 4
+  move $a0, $t1
+  syscall
+  jr		$ra					# jump to $ra
+
+new_line:
+  la $a0, next_line
+  li $v0, 4
+  syscall
+  
+  jr $ra
+
 
 
 
@@ -93,5 +201,6 @@ main:
     # 24 Sample Rate
     # 28 Byte Rate
     # 34 Bits per Sample
+
 
 
