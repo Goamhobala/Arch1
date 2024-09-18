@@ -5,7 +5,9 @@ file_path: .space 4097 # max chars is 4096
 input_size_prompt: .asciiz "file size: \n"
 file_size: .word 0
 output_heading: .asciiz "Heading:\n"
-header_buffer: .space 44
+header_pointer: .word 1
+hardcoded: .asciiz "/home/y/yhxjin001/CSC2002S/Arch1/question1/q1_t1_in.wav"
+test_buffer: .space 44
 
 .text # Starts code section of the program
 .globl main # makes main visible to the linker
@@ -22,7 +24,7 @@ main:
     li $v0, 8
     syscall
 
-    # move user input to $s0
+    # move file name input to $s0
     move $s0, $a0
 
     # Prompt to input file size
@@ -41,29 +43,46 @@ main:
     li $v0, 9
     lw $a0, file_size
     syscall
-
-    move $s2, $v0 # v0 contains address of the allocated memory
-
+    la $t0, header_pointer
+    sw $v0, 0($t0) # v0 contains address of the allocated memory
+                   # Header pointer points to the memory location
+   
     # Open the file
-    li $v0, 13  # Opens file, takes 2 args.
-    move $a0, $s0 # a0 Address of file_path string
+    li $v0, 13  # Opens file, takes 3 args.
+    la $a0, hardcoded # a0 Address of file_path string
     li $a1, 0   # a1 flags (0 for read)           
     li $a2, 0   # a2 mode  (0 for permission, don't need this if not creating)
     syscall     
-    move $s3, $v0
+    move $t1, $v0
+
+    # Test opening
+#    move $a0, $t1
+ #   li $v0, 1
+  #  syscall
 
     # Read file content into file buffer
     li $v0, 14  # 14 reads file
-    move $a0, $s3 # Move file descriptor to a0
-    move $a1, $s2 # Move address of file buffer to a1
-    lw $a2, file_size # File Size == Number of Characters to read?
+    move $a0, $t1 # Move file descriptor to a0
+    la $a1, test_buffer # Move address of file buffer to a1
+    li $a2, 132344 # File Size == Number of Characters to read?
     syscall
 
+
+    # Test reading
+ #   move $a0, $v0
+   # li $v0, 1
+    #syscall
+
+
     # Test Printing Chunk ID
-    addi $a0, $s2, 22
+ #   lw $t2, 0($t0) #load the first item in the location (pointer)
+    la $t0, test_buffer
+    la $a0, 22($t0) # Load address of first item of the file (item stored in that location)
     li $v0, 1
     syscall
 
+    li $v0, 10
+    syscall
 
 
 
