@@ -1,21 +1,18 @@
-# question1.asm
+# question2.asm
+
 .data
 input_file_prompt: .asciiz "Enter a wave file name:\n"
 input_size_prompt: .asciiz "Enter the file size (in bytes):\n"
 heading_message: .asciiz "Information about the wave file:\n================================\n"
-channel_message: .asciiz "Number of channels: "
-sample_rate_message: .asciiz "Sample rate: "
-byte_rate_message: .asciiz "Byte rate: "
-bits_message: .asciiz "Bits per sample: "
 next_line: .asciiz "\n"
+max_message: .asciiz "Maximum amplitude: "
+min_message: .asciiz "Minimum amplitude: "
 
 
 file_path: .space 4097 # max chars is 4096
 file_size: .word 0
-output_heading: .asciiz "Heading:\n"
 header_pointer: .word 1
 hardcoded: .asciiz "/home/y/yhxjin001/CSC2002S/Arch1/question1/q1_t1_in.wav"
-test_buffer: .space 44
 
 
 .text # Starts code section of the program
@@ -40,7 +37,7 @@ main:
     #t1 stores the target
     la $t1, next_line
     lb $t1, 0($t1)
-    jalr clean_path 
+    jal clean_path 
 
     sub $t0, $t0, $t3
 
@@ -73,11 +70,6 @@ main:
     syscall     
     move $t1, $v0
 
-    # Test opening
-#    move $a0, $t1
- #   li $v0, 1
-  #  syscall
-
     # Read file content into file buffer
     li $v0, 14  # 14 reads file
     move $a0, $t1 # Move file descriptor to a0
@@ -85,77 +77,98 @@ main:
     lw $a2, file_size # File Size == Number of Characters to read?
     syscall
 
-  la $t0, header_pointer
+    # Access sample bit depth (34)
+    la $t0, header_pointer
+    # lh $t1, 34($t0)
+    la $s1, 44($t0) # data head
 
-  # Print heading message
-  la $a0, heading_message
-  li $v0, 4
-  syscall
+    # # Calculate bytes per measurement
+    # li $t2, 8
+    # div $s0, $t1, $t2
 
-# Print data
-  la $t0, 22($t0) # address to the number of channels
-  la $t1, channel_message
-
-  li $v0, 4
-  move $a0, $t1
-  syscall
-
-  li $v0, 1
-  lh $a0, 0($t0)
-  syscall
-
-  jal new_line
-
-  la $t0, 2($t0) # address to the number of channels
-  la $t1, sample_rate_message
-
-  li $v0, 4
-  move $a0, $t1
-  syscall
-
-  li $v0, 1
-  lw $a0, 0($t0)
-  syscall
-
-  jal new_line
-
-  la $t0, 4($t0) # address to the number of channels
-  la $t1, byte_rate_message
-  jal print_msg
-  li $v0, 1
-  lw $a0, 0($t0)
-  syscall
-
-  jal new_line
-
-  la $t0, 6($t0) # address to the number of channels
-  la $t1, bits_message
-  jal print_msg
-  li $v0, 1
-  lh $a0, 0($t0)
-  syscall
+    # Test (16 for file 1)
+    # move $a0, $s0
+    # li $v0, 1
+    # syscall
+    
+    # #bit depth == 16 => 2bytes per measurement
+    # lh $t0, 0($s1) #t0 is min
+    # lh $t1, 0($s1)  #t1 is max
 
 
+    # Calculating number of iterations
+    lw $t3, file_size 
+    sub $t3, $t3, 44
+    move $t2, $zero
 
-  li $v0, 10
-  syscall
+    # #test accessing info
+    # move $a0, $t5
+    # li $v0, 1
+    # syscall
 
-  # la $s1, 24($t0) # Address to the smaple rate
-  # la $s2. 28($t0) # Address to byte rate
+    jal find_max_min
 
-print_msg:
-  # Take t0 as the integer
-  # Take t1 as the message
-  li $v0, 4
-  move $a0, $t1
-  syscall
-  jr		$ra					# jump to $ra
+    # #test accessing info
+    # lh $t3, 12($s1)
+    # move $a0, $t3
+    # li $v0, 1
+    # syscall
 
-new_line:
-  la $a0, next_line
-  li $v0, 4
-  syscall
-  
+    # Print heading message
+    la $a0, heading_message
+    li $v0, 4
+    syscall
+
+    la $a0, max_message
+    li $v0, 4
+    syscall
+
+    move $a0, $t1
+    li $v0, 1
+    syscall
+
+    jal new_line
+
+    la $a0, min_message
+    li $v0, 4
+    syscall
+
+    move $a0, $t0
+    li $v0, 1
+    syscall
+
+    li $v0, 10
+    syscall
+
+
+    
+find_max_min:
+    # t4 stores current value
+
+    add $t6, $t2, $s1
+    lh $t4, 0($t6)
+
+    bgt $t0, $t4, replace_min
+    blt $t1, $t4, replace_max
+
+
+    # Go back if reached end
+    beq $t2, $t3, return
+    addi $t2, $t2, 2
+    j find_max_min
+
+replace_min:
+  move $t0, $t4
+  addi $t2, $t2, 2
+  j find_max_min
+
+replace_max:
+  move $t1, $t4
+  addi $t2, $t2, 2
+  j find_max_min
+
+
+return:
   jr $ra
 
 
@@ -171,28 +184,13 @@ clean_path:
   j clean_path
   
 remove_char:
-  # # Test before
-  # lb $t1, 0($t0)
-  # move $a0, $t1
-
-  # li $v0, 1
-  # syscall
   sb $zero, 0($t0)
   lb $t1, 0($t0)
-  # move $a0, $t1
-  # li $v0, 1
-  # syscall
   jr $ra
 
-
-
-    # Store file size
-    
-# Reference:
-    # 22 Num Channels
-    # 24 Sample Rate
-    # 28 Byte Rate
-    # 34 Bits per Sample
-
-
-
+new_line:
+  la $a0, next_line
+  li $v0, 4
+  syscall
+  
+  jr $ra
