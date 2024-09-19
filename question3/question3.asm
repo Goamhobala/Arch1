@@ -1,12 +1,8 @@
-# question2.asm
-
 .data
 input_file_prompt: .asciiz "Enter a wave file name:\n"
 input_size_prompt: .asciiz "Enter the file size (in bytes):\n"
 heading_message: .asciiz "Information about the wave file:\n================================\n"
 next_line: .asciiz "\n"
-max_message: .asciiz "Maximum amplitude: "
-min_message: .asciiz "Minimum amplitude: "
 file_path: .space 4098 # max chars is 4096
 file_size: .word 0
 
@@ -76,107 +72,81 @@ main:
     la $a1, header_pointer # Move address of file buffer to a1
     lw $a2, file_size # File Size == Number of Characters to read?
     syscall
-
-    # Access sample bit depth (34)
-    la $t0, header_pointer
-    lh $t1, 34($t0) # Sample bit depth is 16
-    la $s1, 44($t0) # data head
-
-
-    # # Calculate bytes per measurement
-    # li $t2, 8
-    # div $s0, $t1, $t2
-
-    # Test (16 for file 1)
-    # move $a0, $s0
-    # li $v0, 1
-    # syscall
     
-    # #bit depth == 16 => 2bytes per measurement
-    # lh $t0, 0($s1) #t0 is min
-    # lh $t1, 0($s1)  #t1 is max
+    # t0 contains address of file buffer
+    la $s3, 0($a1)
+    # s0 conatains address of first element
+    la $s0, 0($s3)
+    # s1 contains first data
+    la $s1, 44($s3)
+    # s2 contains  last data
+    sub $t0, $a2, 2
+    add $s2, $s0, $t0 
 
 
-    # Calculating number of iterations
-    lw $t3, file_size 
-    sub $t3, $t3, 44
-    move $t2, $zero
-    
-    add $t6, $t2, $s1
-    lh $t4, 0($t6)
-    # Initialise t0 and t1
-    move $t0, $t4
-    move $t1, $t4
 
-    # #test accessing info
-    # move $a0, $t5
-    # li $v0, 1
-    # syscall
+    sub $t0, $s2, $s1
+    li $t1, 2
+    div  $t0, $t1 #(divide by  2, the number of pairs)
+    mfhi $t2
+    mflo $t3
+    #s3 stores the number of swaps/pairs   
+    add $s3, $t3, $t2 # Add remainder to account for singletons
+ 
+    # lw $t0, 0($s1)
+    # addi $t1, $s2, -2 # $t1 is the last number 
+    li $t3, 0 #t3 is the counter
 
-    jal find_max_min
-
-    # #test accessing info
-    # lh $t3, 12($s1)
-    # move $a0, $t3
-    # li $v0, 1
-    # syscall
-
-    # Print heading message
-    la $a0, heading_message
-    li $v0, 4
-    syscall
-
-    la $a0, max_message
-    li $v0, 4
-    syscall
-
-    move $a0, $t1
-    li $v0, 1
-    syscall
-
-    jal new_line
-
-    la $a0, min_message
-    li $v0, 4
-    syscall
-
-    move $a0, $t0
-    li $v0, 1
-    syscall
+    jal reverse
 
     li $v0, 10
     syscall
 
 
+reverse:
+    #t0 address of smaller, t1 address of bigger
+    #Calculate index
     
-find_max_min:
-    # t4 stores current value
 
-    add $t6, $t2, $s1
-    lh $t4, 0($t6)
-    #nothing at $t3 ($t3 - 2 contains the last bit of data, we're starting at 0!)
-    beq $t2, $t3, return
+    beq $t3, $s3, return
+    mul $t6, $t3, 2
+    add $t0, $t6, $s1
+    sub $t1, $s1, $t6
+    #t2 is a temp to store the value at t0
+    
+    #testing
+    jal new_line
     li $v0, 1
-    move $a0, $t4
+    lh $a0, 0($t0)
     syscall
 
-    bgt $t0, $t4, replace_min
-    blt $t1, $t4, replace_max
+    jal new_line
+    li $v0, 1
+    lh $a0, 0($t1)
+    syscall
 
 
-    # return if reached end
-    addi $t2, $t2, 2
-    j find_max_min
+    lh $t2, 0($t0)
+    lh $t4, 0($t1)
+    sh $t2, 0($t1)
+    sh $t4, 0($t0) 
+    
+        #testing
+    jal new_line
+    li $v0, 1
+    lh $a0, 0($t0)
+    syscall
 
-replace_min:
-  move $t0, $t4
-  # addi $t2, $t2, 2
-  j find_max_min
+    jal new_line
+    li $v0, 1
+    lh $a0, 0($t1)
+    syscall
 
-replace_max:
-  move $t1, $t4
-  # addi $t2, $t2, 2 # Problem with this is that the first one is both the max and min
-  j find_max_min
+    addi $t3, $t3, 1
+    j reverse
+    
+    
+
 
 
 return:
@@ -205,5 +175,3 @@ new_line:
   syscall
   
   jr $ra
-
-# /home/y/yhxjin001/test2-2.wav
