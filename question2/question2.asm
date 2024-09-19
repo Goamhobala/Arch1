@@ -7,11 +7,11 @@ heading_message: .asciiz "Information about the wave file:\n====================
 next_line: .asciiz "\n"
 max_message: .asciiz "Maximum amplitude: "
 min_message: .asciiz "Minimum amplitude: "
-
-
-file_path: .space 4097 # max chars is 4096
+file_path: .space 4098 # max chars is 4096
 file_size: .word 0
-header_pointer: .word 1
+
+.align 2
+header_pointer: .word 0
 hardcoded: .asciiz "/home/y/yhxjin001/CSC2002S/Arch1/question1/q1_t1_in.wav"
 
 
@@ -79,8 +79,9 @@ main:
 
     # Access sample bit depth (34)
     la $t0, header_pointer
-    # lh $t1, 34($t0)
+    lh $t1, 34($t0) # Sample bit depth is 16
     la $s1, 44($t0) # data head
+
 
     # # Calculate bytes per measurement
     # li $t2, 8
@@ -100,6 +101,12 @@ main:
     lw $t3, file_size 
     sub $t3, $t3, 44
     move $t2, $zero
+    
+    add $t6, $t2, $s1
+    lh $t4, 0($t6)
+    # Initialise t0 and t1
+    move $t0, $t4
+    move $t1, $t4
 
     # #test accessing info
     # move $a0, $t5
@@ -147,24 +154,28 @@ find_max_min:
 
     add $t6, $t2, $s1
     lh $t4, 0($t6)
+    #nothing at $t3 ($t3 - 2 contains the last bit of data, we're starting at 0!)
+    beq $t2, $t3, return
+    # li $v0, 1
+    # move $a0, $t4
+    # syscall
 
     bgt $t0, $t4, replace_min
     blt $t1, $t4, replace_max
 
 
-    # Go back if reached end
-    beq $t2, $t3, return
+    # return if reached end
     addi $t2, $t2, 2
     j find_max_min
 
 replace_min:
   move $t0, $t4
-  addi $t2, $t2, 2
+  # addi $t2, $t2, 2
   j find_max_min
 
 replace_max:
   move $t1, $t4
-  addi $t2, $t2, 2
+  # addi $t2, $t2, 2 # Problem with this is that the first one is both the max and min
   j find_max_min
 
 
@@ -194,3 +205,5 @@ new_line:
   syscall
   
   jr $ra
+
+# /home/y/yhxjin001/test2-2.wav
