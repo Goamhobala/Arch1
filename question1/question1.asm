@@ -80,11 +80,11 @@ main:
     # Read file content into file buffer
     li $v0, 14  # 14 reads file
     move $a0, $t1 # Move file descriptor to a0
-    la $a1, test_buffer # Move address of file buffer to a1
-    li $a2, 132344 # File Size == Number of Characters to read?
+    la $a1, header_pointer # Move address of file buffer to a1
+    lw $a2, file_size # File Size == Number of Characters to read?
     syscall
 
-  la $t0, test_buffer
+  la $t0, header_pointer
 
   la $t0, 22($t0) # address to the number of channels
   la $t1, channel_message
