@@ -31,20 +31,20 @@ main:
     li $a1, 100
     li $v0, 8
     syscall
-
     # move file name input to $s0
     la $t0, file_path
     # Counter
     move $t3, $zero
     #t0 stores the current char address of the string
     #t1 stores the target
+    la $t1, next_line
+    lb $t1, 0($t1)
     jalr clean_path 
 
     sub $t0, $t0, $t3
-    addi $t0, $t0, 1
 
 
-    # Prompt to input file size
+    # Prompt to input file size"\n"
     la $a0, input_size_prompt
     li $v0, 4
     syscall
@@ -137,7 +137,6 @@ main:
   # la $s1, 24($t0) # Address to the smaple rate
   # la $s2. 28($t0) # Address to byte rate
 
-
 print_msg:
   # Take t0 as the integer
   # Take t1 as the message
@@ -159,7 +158,7 @@ clean_path:
 
 
   lb $t2, 0($t0)
-  beq $t2, $zero, remove_char
+  beq $t2, $t1, remove_char
   # Add counter for reverse later
   addi $t3, $t3, 1
   addi $t0, $t0, 1
