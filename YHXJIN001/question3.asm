@@ -12,7 +12,7 @@ output_path: .space 4097
 input_pointer: .word 0
 .align 4
 output_pointer: .word 0
-hardcoded: .asciiz "/home/y/yhxjin001/test2.wav"
+hardcoded: .asciiz "/home/y/yhxjin001/CSC2002S/Arch1/question1/q1_t1_in.wav"
 
 
 .text # Starts code section of the program
@@ -46,8 +46,6 @@ main:
     li $a1, 100
     li $v0, 8
     syscall
-
-    la $t0, output_path
     
     # Counter
     move $t3, $zero
@@ -83,7 +81,7 @@ main:
     la $t5, output_pointer
     sw $v0, 0($t5) # v0 contains address of the allocated memory
                    # Header pointer points to the memory location
-
+   
     # Open the input file
     li $v0, 13  # Opens file, takes 3 args.
     la $a0, input_path # a0 Address of input_path string
@@ -98,18 +96,18 @@ main:
     lw $a1, input_pointer # Move address of file buffer to a1
     lw $a2, file_size # File Size == Number of Characters to read?
     syscall
-    
+
     # Open outputfile 
     li $v0, 13  # Opens file, takes 3 args.
     la $a0, output_path # a0 Address of input_path string
-    li $a1, 577   # a1 flags (O_create )           
-    li $a2, 511 # a2 mode  (777 for permission)
+    li $a1, 0x101   # a1 flags (O_create for read)           
+    li $a2, 0x1FF  # a2 mode  (777 for permission)
     syscall     
-    move $t9, $v0
+    move $t1, $v0
 
     # Read output file content into file buffer
     li $v0, 14  # 14 reads file
-    move $a0, $t9 # Move file descriptor to a0
+    move $a0, $t1 # Move file descriptor to a0
     lw $a1, output_pointer # load the address of allocated file buffer to a1
     lw $a2, file_size # File Size == Number of Characters to read?
     syscall
@@ -148,11 +146,7 @@ main:
 
     # Copying header of input to output
     jal copy_header
-    # Check
-    # li $v0, 1
-    # lh $a0, 22($s6)
-    # syscall
-
+      # Check
 
     la $s1, 44($s0) # address of first data of file 1
     la $s5, 44($s6) # address of first data of file 2
@@ -162,10 +156,10 @@ main:
     # syscall
 
     lw $t0, file_size
-    # sub $t1, $t0, 2   #t1 is how many bytes of data after header, -2 because the last is stored at last -2
-    add $s2, $s0, $t0 # s2 contains  end of file 1
+    sub $t1, $t0, 2
+    add $s2, $s0, $t1 # s2 contains  last data of file 1
 
-    add $s7, $s6, $t0 # s7 contains end of file 2
+    add $s7, $s6, $t1 # s7 contains last data of file 2
 
     # jal new_line
     # li $v0, 1
@@ -175,46 +169,48 @@ main:
 
 
     sub $t0, $s2, $s1
-    li $t1, 2
+    li $t1, 4
     div  $t0, $t1 #(divide by  2 for pairs)
     mfhi $t2
+    
+    # jal new_line
+    # li $v0, 1
+    # move $a0, $t2
+    # syscall
+
     mflo $t3
-
-
-
-
-    #s4 stores the number of swaps/pairs   
-    # add $t4, $t3, $t2 # Add remainder to account for singletons
-    sub $s4, $s2, $s1  
-
 
     # jal new_line
     # li $v0, 1
     # move $a0, $t3
     # syscall
 
+
+
+    #s4 stores the number of swaps/pairs   
+    add $t4, $t3, $t2 # Add remainder to account for singletons
+    addi $s4, $t4, -1 # Subtract 1 cuz we're starting at 0
+    # jal new_line
     # li $v0, 1
-    # lh $a0, 44($s0)
+    # move $a0, $s3
     # syscall
 
+    # lw $t0, 0($s1)
+    # addi $t1, $s2, -2 # $t1 is the last numb    # jal new_line
     # li $v0, 1
-    # lh $a0, 44($s6)
-    # syscall
+    # move $a0, $s3
+    # syscaller 
     move $t3, $zero #t3 is the counter
+
+    # jal new_line
+    # li $v0, 1
+    # move $a0, $t3
+    # syscall
+
     jal reverse
 
-    # li $v0, 1
-    # lh $a0, 44($s0)
-    # syscall
-
-    # li $v0, 1
-    # lh $a0, 62($s6)
-    # syscall
-    move $a0, $t9
-    li $v0, 16
-    syscall
-    
     li $v0, 10
+
     syscall
 
 reverse:
@@ -235,15 +231,14 @@ reverse:
     #t0 for head, t1 for tail
     mul $t6, $t3, 2
     add $t0, $t6, $s1
-    # add $t7, $t6, $s5 #t7 for first half data of file 2
-    # sub $t1, $s2, $t6
+    add $t7, $t6, $s5 #t7 for first half data of file 2
+    sub $t1, $s2, $t6
     sub $t8, $s7, $t6 #t8 for second half data of file 2
-    addi $t8, $t8, -2 # to offset the fact that we pivot s7 at the end of data
 
     lh $t2, 0($t0)
-    # lh $t4, 0($t1)
+    lh $t4, 0($t1)
     sh $t2, 0($t8)
-    # sh $t4, 0($t7) 
+    sh $t4, 0($t7) 
 
     addi $t3, $t3, 1
     j reverse
