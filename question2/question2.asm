@@ -207,3 +207,4 @@ new_line:
   jr $ra
 
 # /home/y/yhxjin001/test2-2.wav
+# /Users/youyasushi/test2-2.wav

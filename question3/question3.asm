@@ -73,15 +73,49 @@ main:
     lw $a2, file_size # File Size == Number of Characters to read?
     syscall
     
-    # t0 contains address of file buffer
+    # t0 contains address of 
+    li $v0, 1
+    move $a0, $a1
+    syscall
+
+
     la $s3, 0($a1)
+    jal new_line
+
+    li $v0, 1
+    move $a0, $s3
+    syscall
+
     # s0 conatains address of first element
     la $s0, 0($s3)
-    # s1 contains first data
+
+    jal new_line
+    li $v0, 1
+    move $a0, $s0
+    syscall
+
+    move $a0, $s0
+    li $v0, 4
+    syscall
+    
+    # s1 contains address of first data
+
+
     la $s1, 44($s3)
+
+    jal new_line
+    li $v0, 1
+    move $a0, $s1
+    syscall
+
     # s2 contains  last data
     sub $t0, $a2, 2
     add $s2, $s0, $t0 
+
+    jal new_line
+    li $v0, 1
+    move $a0, $s2
+    syscall
 
 
 
@@ -95,7 +129,7 @@ main:
  
     # lw $t0, 0($s1)
     # addi $t1, $s2, -2 # $t1 is the last number 
-    li $t3, 0 #t3 is the counter
+    move $t3, $zero #t3 is the counter
 
     jal reverse
 
