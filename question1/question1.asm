@@ -40,7 +40,7 @@ main:
     #t1 stores the target
     la $t1, next_line
     lb $t1, 0($t1)
-    jalr clean_path 
+    jal clean_path 
 
     sub $t0, $t0, $t3
 

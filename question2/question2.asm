@@ -64,7 +64,7 @@ main:
    
     # Open the file
     li $v0, 13  # Opens file, takes 3 args.
-    move $a0, $t0 # a0 Address of file_path string
+    la $a0, file_path # a0 Address of file_path string
     li $a1, 0   # a1 flags (0 for read)           
     li $a2, 0   # a2 mode  (0 for permission, don't need this if not creating)
     syscall     
