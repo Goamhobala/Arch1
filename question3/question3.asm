@@ -3,13 +3,14 @@ input_file_prompt: .asciiz "Enter a wave file name:\n"
 input_size_prompt: .asciiz "Enter the file size (in bytes):\n"
 heading_message: .asciiz "Information about the wave file:\n================================\n"
 next_line: .asciiz "\n"
-file_path: .space 4097 # max chars is 4096
+input_path: .space 4097 # max chars is 4096
 file_size: .word 0
 # File path is like a pointer that points to the actual location where the item is stored
 output_path: .space 4097
 
-.align 2
+.align 4
 input_pointer: .word 0
+.align 4
 output_pointer: .word 0
 hardcoded: .asciiz "/home/y/yhxjin001/CSC2002S/Arch1/question1/q1_t1_in.wav"
 
@@ -18,18 +19,18 @@ hardcoded: .asciiz "/home/y/yhxjin001/CSC2002S/Arch1/question1/q1_t1_in.wav"
 .globl main # makes main visible to the linker
 
 main:
-    # Read file name
-    la $a0, input_file_prompt
-    li $v0, 4 
-    syscall
+    # # Read file name
+    # la $a0, input_file_prompt
+    # li $v0, 4 
+    # syscall
 
     #Store file name
-    la $a0, file_path
+    la $a0, input_path
     li $a1, 100
     li $v0, 8
     syscall
     # move file name input to $s0
-    la $t0, file_path
+    la $t0, input_path
     # Counter
     move $t3, $zero
     #t0 stores the current char address of the string
@@ -60,11 +61,12 @@ main:
     sub $t0, $t0, $t3
 
 
+    jal new_line
 
     # Prompt to input file size"\n"
-    la $a0, input_size_prompt
-    li $v0, 4
-    syscall
+    # la $a0, input_size_prompt
+    # li $v0, 4
+    # syscall
 
     # Read and store file size
     li $v0, 5   # If it's an integer, then the return value is stored in v0. If it's a string however, the register can't store it and thus requires an argument that contains an address to store the register
@@ -88,7 +90,7 @@ main:
    
     # Open the input file
     li $v0, 13  # Opens file, takes 3 args.
-    move $a0, $t0 # a0 Address of file_path string
+    la $a0, input_path # a0 Address of input_path string
     li $a1, 0   # a1 flags (0 for read)           
     li $a2, 0   # a2 mode  (0 for permission, don't need this if not creating)
     syscall     
@@ -97,13 +99,13 @@ main:
     # Read file content into file buffer
     li $v0, 14  # 14 reads file
     move $a0, $t1 # Move file descriptor to a0
-    la $a1, input_pointer # Move address of file buffer to a1
+    lw $a1, input_pointer # Move address of file buffer to a1
     lw $a2, file_size # File Size == Number of Characters to read?
     syscall
-    
+
     # Open outputfile 
     li $v0, 13  # Opens file, takes 3 args.
-    la $a0, output_path # a0 Address of file_path string
+    la $a0, output_path # a0 Address of input_path string
     li $a1, 0x101   # a1 flags (O_create for read)           
     li $a2, 0x1FF  # a2 mode  (777 for permission)
     syscall     
@@ -112,23 +114,30 @@ main:
     # Read output file content into file buffer
     li $v0, 14  # 14 reads file
     move $a0, $t1 # Move file descriptor to a0
-    la $a1, output_pointer # Move address of file buffer to a1
+    lw $a1, output_pointer # load the address of allocated file buffer to a1
     lw $a2, file_size # File Size == Number of Characters to read?
     syscall
 
 
 
+    lw $t0, input_pointer
+    la $s3, 0($t0)  
+    lw $t1, output_pointer
+    la $s5, 0($t1)
 
-
-    # t0 contains address of 
-    # li $v0, 1
-    # move $a0, $a1
+    # move $a0, $s3
+    # li $v0, 4
     # syscall
 
-    la $t0, input_pointer
-    la $s3, 0($t0)  
-    la $t0, output_pointer
-    la $s5, 0($t0)
+
+    # move $a0, $s3
+    # li $v0, 1
+    # syscall
+
+    # la $a0, 0($s3)
+    # li $v0, 4
+    # syscall
+
 
     # li $v0, 1
     # move $a0, $s3
@@ -146,10 +155,7 @@ main:
     # Copying header of input to output
     jal copy_header
       # Check
-    la $t0, 0($s5)
-    move $a0, $t0
-    li $v0, 4
-    syscall
+
  
 
     la $s1, 44($s3)
