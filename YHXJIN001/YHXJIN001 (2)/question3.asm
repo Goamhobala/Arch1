@@ -244,7 +244,7 @@ reverse:
     # add $t7, $t6, $s5 #t7 for first half data of file 2
     # sub $t1, $s2, $t6
     sub $t8, $s7, $t3 #t8 for second half data of file 2
-    addi $t8, $t8 # to offset the fact that we pivot s7 at the end of data
+    addi $t8, $t8, -2 # to offset the fact that we pivot s7 at the end of data
 
     lb $t2, 0($t0)
     # lh $t4, 0($t1)

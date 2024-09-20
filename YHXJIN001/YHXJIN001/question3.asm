@@ -103,10 +103,19 @@ main:
     # Open outputfile 
     li $v0, 13  # Opens file, takes 3 args.
     la $a0, output_path # a0 Address of input_path string
-    li $a1, 577  # a1 flags (O_create )           
+    li $a1, 66   # a1 flags (O_create )           
     li $a2, 511 # a2 mode  (777 for permission)
     syscall     
     move $t9, $v0
+
+    # Read output file content into file buffer
+    li $v0, 14  # 14 reads file
+    move $a0, $t9 # Move file descriptor to a0
+    lw $a1, output_pointer # load the address of allocated file buffer to a1
+    lw $a2, file_size # File Size == Number of Characters to read?
+    syscall
+
+
 
     lw $t0, input_pointer
     la $s0, 0($t0)  
@@ -202,20 +211,11 @@ main:
     # li $v0, 1
     # lh $a0, 62($s6)
     # syscall
-
-
-
-        # Read output file content into file buffer
-    li $v0, 15  # 14 reads file
-    move $a0, $t9 # a0 descriptor of 
-    lw $t0, output_pointer
-    la $a1, 0($t0)  # a1 flags (O_create )           
-    lw $a2, file_size # a2 mode  (777 for permission)
-    syscall
-
     move $a0, $t9
     li $v0, 16
     syscall
+  
+
     # move $a0, $v0
     # li $v0, 1
     # syscall
@@ -239,16 +239,16 @@ reverse:
 
     beq $t3, $s4, return
     #t0 for head, t1 for tail
-    # mul $t6, $t3, 2
-    add $t0, $t3, $s1
+    mul $t6, $t3, 2
+    add $t0, $t6, $s1
     # add $t7, $t6, $s5 #t7 for first half data of file 2
     # sub $t1, $s2, $t6
-    sub $t8, $s7, $t3 #t8 for second half data of file 2
-    addi $t8, $t8 # to offset the fact that we pivot s7 at the end of data
+    sub $t8, $s7, $t6 #t8 for second half data of file 2
+    addi $t8, $t8, -2 # to offset the fact that we pivot s7 at the end of data
 
-    lb $t2, 0($t0)
+    lh $t2, 0($t0)
     # lh $t4, 0($t1)
-    sb $t2, 0($t8)
+    sh $t2, 0($t8)
     # sh $t4, 0($t7) 
 
     addi $t3, $t3, 1
@@ -260,9 +260,9 @@ copy_header:
     beq $t0, $t1, return
     add $t2, $t0, $s0 #Address of current file 1 element
     add $t3, $t0, $s6 # Address of current file 2 element
-    lb $t4, 0($t2) # Load element in 0(t2) to t4
-    sb $t4, 0($t3) # Save element in t4 to 0(t3) 
-    addi $t0, $t0, 1
+    lh $t4, 0($t2) # Load element in 0(t2) to t4
+    sh $t4, 0($t3) # Save element in t4 to 0(t3) 
+    addi $t0, $t0, 2
     j copy_header
 
 
